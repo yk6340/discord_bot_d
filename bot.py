@@ -32,6 +32,8 @@ if os.getenv("RAILWAY_ENVIRONMENT") is None:
     # ローカル環境のときだけ .env を読む
     from dotenv import load_dotenv
     load_dotenv()
+    print("[debug] ALL ENV KEYS:", list(os.environ.keys()))
+    print("[debug] CHANNEL_HEALTH raw:", os.getenv("CHANNEL_HEALTH"))
     
 TOKEN    = os.getenv("DISCORD_TOKEN")
 GUILD_ID = os.getenv("GUILD_ID")
