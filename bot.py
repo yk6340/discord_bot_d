@@ -28,7 +28,11 @@ async def start_web():
     print(f"[web] health server on :{port}")
 
 # ===== 環境変数 =====
-load_dotenv()
+if os.getenv("RAILWAY_ENVIRONMENT") is None:
+    # ローカル環境のときだけ .env を読む
+    from dotenv import load_dotenv
+    load_dotenv()
+    
 TOKEN    = os.getenv("DISCORD_TOKEN")
 GUILD_ID = os.getenv("GUILD_ID")
 GAS_URL  = os.getenv("GAS_URL")
