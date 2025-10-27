@@ -264,9 +264,12 @@ async def on_message(message: discord.Message):
 # ===== on_ready（1つだけ！） =====
 @bot.event
 async def on_ready():
-    print(f"[ready] Logged in as {bot.user} (id={bot.user.id})")
-    print("[ready] Guilds:", [(g.name, g.id) for g in bot.guilds])
-    print("[ready] HRS_IDS =", HRS_IDS, "QBOX_IDS =", QBOX_IDS, "HEALTH_IDS =", HEALTH_IDS)
+    print("[ready] Logged in as", bot.user)
+    guild = discord.Object(id=int(GUILD_ID))
+    bot.tree.copy_global_to(guild=guild)
+    synced = await bot.tree.sync(guild=guild)
+    print(f"[ready] slash commands synced: {[cmd.name for cmd in synced]}")
+
 
     # ✅ 永続ボタン（定義済みチャンネル分すべて）
     for cid in TAG_SETS.keys():
