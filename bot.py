@@ -193,7 +193,7 @@ def build_placeholder(channel_id: int, label: str) -> str:
         if "薬" in label:
             return "例）#お薬相談 朝飲み忘れたときは、次どうしたらいいですか？"
         else:
-            return "例）#健康相談 昼から頭が痛いです。今日は早退した方がいいですか？"
+            return "例）#健康相談 頭が痛いことがあって、薬を飲んでも良くならないことが多いです。先生には効かないと言ってもいいですか？"
 
     if channel_id in QBOX_IDS:
         return "例）#質問 作業中に分からないところがあります。どうすればいいですか？"
