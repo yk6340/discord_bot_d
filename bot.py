@@ -179,7 +179,7 @@ async def on_interaction(interaction: discord.Interaction):
     if not items or not (0 <= idx < len(items)):
         return
 
-    _, tag_text = items[idx]
+    label, tag_text = items[idx]
       # ここでplaceholder決定
     placeholder_text = build_placeholder(chan_id, label)
 
