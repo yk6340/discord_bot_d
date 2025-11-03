@@ -139,7 +139,52 @@ class PersistentTagView(ui.View):
             custom_id = f"tag:{channel_id}:{i}"
             self.add_item(ui.Button(label=label, style=style, custom_id=custom_id))
 
-# ===== ボタン押下 → モーダル =====
+# ===== モーダル =====
+class TagInputModal(ui.Modal, title="記録内容を入力"):
+    def __init__(self, tag_text: str, sheet_key: str, placeholder_text: str = "例）#相談 ○○について共有します。"):
+        super().__init__(timeout=300)
+        self.tag_text = tag_text
+        self.sheet_key = sheet_key
+        self.text = ui.TextInput(
+            label="本文（任意）",
+            style=discord.TextStyle.paragraph,
+            required=False,
+            max_length=1000,
+            placeholder=placeholder_text  # ←可変プレースホルダー対応
+        )
+        self.add_item(self.text)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer(ephemeral=True, thinking=True)
+        except Exception:
+            pass
+
+        if not GAS_URL:
+            await interaction.followup.send("GAS_URL 未設定（Variables）", ephemeral=True)
+            return
+
+        chan_name = getattr(interaction.channel, "name", str(interaction.channel_id))
+        content = (self.tag_text + (self.text.value or "")).strip()
+
+        payload = {
+            "token": GAS_KEY,
+            "channel": chan_name,
+            "user": interaction.user.display_name,
+            "content": content,
+            "sheet": self.sheet_key,
+        }
+
+        try:
+            r = requests.post(GAS_URL, json=payload, timeout=12)
+            print(f"[modal->POST] {r.status_code}")
+            await interaction.followup.send(f"記録しました（{r.status_code}）", ephemeral=True)
+        except Exception as e:
+            print("[modal POST error]:", e)
+            await interaction.followup.send(f"送信エラー: {e}", ephemeral=True)
+
+
+# ===== プレースホルダー文生成関数 =====
 def build_placeholder(channel_id: int, label: str) -> str:
     # channel_id…どのチャンネルで押されたか
     # label……ボタンのラベル("質問", "健康相談", "報告"など)
@@ -159,6 +204,8 @@ def build_placeholder(channel_id: int, label: str) -> str:
     # デフォルト fallback
     return "例）#相談 ○○について共有します。"
 
+
+# ===== ボタン押下 → モーダル =====
 @bot.event
 async def on_interaction(interaction: discord.Interaction):
     if interaction.type != discord.InteractionType.component:
@@ -180,7 +227,7 @@ async def on_interaction(interaction: discord.Interaction):
         return
 
     label, tag_text = items[idx]
-      # ここでplaceholder決定
+    # ここでplaceholder決定
     placeholder_text = build_placeholder(chan_id, label)
 
     sheet_key = "health" if chan_id in HEALTH_IDS else "default"
@@ -188,6 +235,7 @@ async def on_interaction(interaction: discord.Interaction):
     await interaction.response.send_modal(
         TagInputModal(tag_text, sheet_key, placeholder_text)
     )
+
 
 # ===== /tags_pin =====
 @bot.tree.command(name="tags_pin", description="このチャンネルにタグボタンを常設します（公開）")
