@@ -140,6 +140,25 @@ class PersistentTagView(ui.View):
             self.add_item(ui.Button(label=label, style=style, custom_id=custom_id))
 
 # ===== ボタン押下 → モーダル =====
+def build_placeholder(channel_id: int, label: str) -> str:
+    # channel_id…どのチャンネルで押されたか
+    # label……ボタンのラベル("質問", "健康相談", "報告"など)
+
+    if channel_id in HEALTH_IDS:
+        if "薬" in label:
+            return "例）#お薬相談 朝飲み忘れたときは、次どうしたらいいですか？"
+        else:
+            return "例）#健康相談 昼から頭が痛いです。今日は早退した方がいいですか？"
+
+    if channel_id in QBOX_IDS:
+        return "例）#質問 作業中に分からないところがあります。どうすればいいですか？"
+
+    if channel_id in HRS_IDS:
+        return "例）#報告 利用者Aさんが13:30に帰宅希望。送迎手配しました。"
+
+    # デフォルト fallback
+    return "例）#相談 ○○について共有します。"
+
 @bot.event
 async def on_interaction(interaction: discord.Interaction):
     if interaction.type != discord.InteractionType.component:
@@ -161,8 +180,14 @@ async def on_interaction(interaction: discord.Interaction):
         return
 
     _, tag_text = items[idx]
+      # ここでplaceholder決定
+    placeholder_text = build_placeholder(chan_id, label)
+
     sheet_key = "health" if chan_id in HEALTH_IDS else "default"
-    await interaction.response.send_modal(TagInputModal(tag_text, sheet_key))
+
+    await interaction.response.send_modal(
+        TagInputModal(tag_text, sheet_key, placeholder_text)
+    )
 
 # ===== /tags_pin =====
 @bot.tree.command(name="tags_pin", description="このチャンネルにタグボタンを常設します（公開）")
